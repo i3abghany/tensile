@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(Tensor)
+project(tensile)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -18,7 +18,7 @@ set(CMAKE_CXX_COMPILER /usr/bin/g++-10)
 
 include_directories(include)
 
-add_executable(Tensor 
+add_executable(tensile
     src/main.cpp
 )
 
@@ -27,6 +27,7 @@ enable_testing()
 add_executable(tests
     test/init_tests.cpp
     test/index_tests.cpp
+    test/slicing_tests.cpp
 )
 
 target_link_libraries(tests GTest::gtest_main)
