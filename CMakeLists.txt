@@ -21,6 +21,7 @@ include_directories(include)
 add_executable(tensile
     src/main.cpp
     src/index_parser.cpp
+    src/logger.cpp
 )
 
 enable_testing()
@@ -29,7 +30,6 @@ add_executable(tests
     src/index_parser.cpp
 
     test/init_tests.cpp
-    test/index_tests.cpp
     test/slicing_tests.cpp
     test/index_parser_tests.cpp
 )

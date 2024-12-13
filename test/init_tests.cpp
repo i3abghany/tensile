@@ -2,6 +2,8 @@
 
 #include "tensor.h"
 
+using Tensile::Tensor;
+
 TEST(TensorInitialization, DefaultConstructor)
 {
     Tensor<int> tensor;

@@ -6,18 +6,14 @@
 
 int main()
 {
-    int* data = new int[36];
-    std::vector<size_t> shape = { 4, 3, 3 };
-    for (int i = 0; i < 36; i++) {
+    int* data = new int[9];
+    std::vector<size_t> shape = { 3, 3 };
+    for (int i = 0; i < 9; i++) {
         data[i] = i;
     }
 
-    Tensor<int> tensor(data, shape);
-
-    auto sub_tensor = tensor[{
-        { 1, 2 },
-        { 0, 3 },
-        { 0, 3 }
-    }];
-    Logger<std::ostream>::get_ostream_logger()->log(sub_tensor.flat_string());
+    Tensile::Tensor<int> tensor(data, shape);
+    auto slice = tensor["0:2, 0:2"];
+    auto logger = Tensile::Log::get_default_logger();
+    logger->log(slice.flat_string());
 }

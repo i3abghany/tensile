@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+namespace Tensile {
+
 static std::pair<size_t, size_t> parse_range(const std::string& input)
 {
     size_t colon_pos = input.find(':');
@@ -35,3 +37,5 @@ std::vector<std::pair<size_t, size_t>> parse_indices(const std::string& input)
 
     return indices;
 }
+
+};

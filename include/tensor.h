@@ -5,7 +5,10 @@
 #include <numeric>
 #include <utility>
 
+#include "index_parser.h"
 #include "logger.h"
+
+namespace Tensile {
 
 template <typename DataType>
     requires std::integral<DataType> || std::floating_point<DataType>
@@ -58,11 +61,10 @@ public:
         return size;
     }
 
-    DataType operator[](const std::vector<size_t>& indices) const
+    Tensor<DataType> operator[](const std::string& indices)
     {
-        if (indices.size() != n_dims_)
-            throw std::invalid_argument("Number of indices does not match the number of dimensions");
-        return data_[multi_indices_to_flat(indices)];
+        std::vector<std::pair<size_t, size_t>> parsed_indices = parse_indices(indices);
+        return operator[](parsed_indices);
     }
 
     Tensor<DataType> operator[](const std::vector<std::pair<size_t, size_t>>& indices)
@@ -175,3 +177,5 @@ private:
     Tensor<DataType>* parent;
     DataType* data_;
 };
+
+}

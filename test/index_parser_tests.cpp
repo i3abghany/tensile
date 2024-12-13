@@ -2,6 +2,8 @@
 
 #include "index_parser.h"
 
+using Tensile::parse_indices;
+
 TEST(ParseIndices, EmptyString)
 {
     std::string input = "";

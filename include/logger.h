@@ -5,6 +5,8 @@
 #include <iostream>
 #include <memory>
 
+namespace Tensile::Log {
+
 template <typename StreamType> class LoggerDecorator;
 
 template <typename StreamType> class TimestampLogger;
@@ -111,3 +113,7 @@ private:
         }
     }
 };
+
+std::shared_ptr<Logger<std::ostream>> get_default_logger();
+
+}
