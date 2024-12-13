@@ -92,12 +92,12 @@ public:
 
     void log(const std::string& message, Severity severity)
     {
-        std::string severityStr = severity_to_string(severity);
-        this->wrapped_logger_->log("[" + severityStr + "] " + message);
+        std::string severity_str = severity_to_string(severity);
+        this->wrapped_logger_->log("[" + severity_str + "] " + message);
     }
 
 private:
-    std::string severity_to_string(Severity severity) const
+    static std::string severity_to_string(Severity severity)
     {
         switch (severity) {
         case INFO:
