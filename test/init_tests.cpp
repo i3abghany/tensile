@@ -30,7 +30,8 @@ TEST(TensorInitialization, ConstructorWithShape)
     EXPECT_EQ(tensor3.shape()[3], 5);
 }
 
-TEST(TensorConstructorTest, InvalidShape) {
-    std::initializer_list<size_t> shape = {1, 2, 3, 4, 5};
+TEST(TensorConstructorTest, InvalidShape)
+{
+    std::initializer_list<size_t> shape = { 1, 2, 3, 4, 5 };
     EXPECT_THROW(Tensor<int>(nullptr, shape), std::invalid_argument);
 }

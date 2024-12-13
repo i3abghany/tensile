@@ -15,7 +15,11 @@ TEST(TensorIndexing, WrongShape_ShouldThrow)
     Tensor<int> tensor(nullptr, { 2, 3, 4 });
     EXPECT_THROW((tensor[{ 0, 0 }]), std::invalid_argument);
     EXPECT_THROW((tensor[{ 0, 0, 0, 0 }]), std::invalid_argument);
-    EXPECT_THROW((tensor[{ 0 }]), std::invalid_argument);
+
+    // TODO: Cannot cast a single-element "initializer list" to a vector.
+    // One potential fix is to use parsed strings for the indices.
+    // e.g.: tensor["1:2, 2:3, 3:4"]
+    EXPECT_THROW((tensor[std::vector<size_t>({ 0 })]), std::invalid_argument);
 }
 
 TEST(TensorIndexing, SimpleIndexing)
@@ -35,6 +39,4 @@ TEST(TensorIndexing, SimpleIndexing)
             }
         }
     }
-
-    delete[] data;
 }
