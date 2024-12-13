@@ -1,0 +1,7 @@
+#pragma once
+
+#include <sstream>
+#include <string>
+#include <vector>
+
+std::vector<std::pair<size_t, size_t>> parse_indices(const std::string& input);
