@@ -27,7 +27,7 @@ public:
 
     static auto get_ostream_logger()
     {
-        static std::shared_ptr<SeverityLogger<std::ostream>> logger = nullptr;
+        static std::shared_ptr<LoggerDecorator<std::ostream>> logger = nullptr;
 
         if (logger != nullptr)
             return logger;
