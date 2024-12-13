@@ -125,12 +125,12 @@ public:
     bool is_empty() const { return n_dims_ == 0; }
 
     const size_t* shape() const { return shape_; }
+    size_t n_dims() const { return n_dims_; }
 
     ~Tensor()
     {
-        if (parent == nullptr) {
+        if (parent == nullptr)
             delete[] data_;
-        }
     }
 
 private:
