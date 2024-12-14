@@ -10,6 +10,8 @@
 
 namespace Tensile {
 
+static constexpr size_t MAX_DIM = 4;
+
 template <typename DataType>
     requires std::integral<DataType> || std::floating_point<DataType>
 class Tensor {
@@ -20,33 +22,32 @@ public:
         , n_dims_(1)
         , offset_(0)
     {
-        std::fill(shape_, shape_ + MAX_DIM, 0);
-        std::fill(strides_, strides_ + MAX_DIM, 0);
+        std::fill(shape_.begin(), shape_.end(), 0);
+        std::fill(strides_.begin(), strides_.end(), 0);
     }
 
-    Tensor(DataType* data, const std::vector<size_t>& shape)
+    Tensor(DataType* data, const std::vector<size_t>& pshape)
         : parent(nullptr)
         , n_dims_(0)
         , offset_(0)
         , data_(data)
-        , shape_ { 0 }
     {
-        if (shape.size() > MAX_DIM)
+        if (pshape.size() > MAX_DIM)
             throw std::invalid_argument("Tensor shape cannot have more than 4 dimensions");
 
-        n_dims_ = shape.size();
-        for (int i = shape.size() - 1; i >= 0; i--)
-            if (shape[i] == 0)
+        n_dims_ = pshape.size();
+        for (int i = pshape.size() - 1; i >= 0; i--)
+            if (pshape[i] == 0)
                 n_dims_--;
 
-        std::copy(shape.begin(), shape.end(), shape_);
-        for (size_t i = shape.size(); i < MAX_DIM; i++)
+        std::copy(pshape.begin(), pshape.end(), shape_.begin());
+        for (size_t i = pshape.size(); i < MAX_DIM; i++)
             shape_[i] = 0;
 
         init_strides();
     }
 
-    Tensor(DataType* data, size_t shape[Tensor::MAX_DIM])
+    Tensor(DataType* data, size_t shape[MAX_DIM])
         : Tensor(data, std::vector<size_t>(shape, shape + MAX_DIM))
     {
     }
@@ -126,7 +127,8 @@ public:
 
     bool is_empty() const { return n_dims_ == 0; }
 
-    const size_t* shape() const { return shape_; }
+    const std::array<size_t, MAX_DIM> shape() const { return shape_; }
+
     size_t n_dims() const { return n_dims_; }
 
     ~Tensor()
@@ -166,12 +168,9 @@ private:
         return str;
     }
 
-public:
-    static constexpr size_t MAX_DIM = 4;
-
 private:
-    size_t shape_[MAX_DIM];
-    size_t strides_[MAX_DIM];
+    std::array<size_t, MAX_DIM> shape_;
+    std::array<size_t, MAX_DIM> strides_;
     size_t n_dims_;
     size_t offset_;
     Tensor<DataType>* parent;
