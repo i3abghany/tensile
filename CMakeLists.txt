@@ -14,8 +14,6 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(googletest)
 
-set(CMAKE_CXX_COMPILER /usr/bin/g++-10)
-
 include_directories(include)
 
 add_compile_options(-Wall
@@ -26,7 +24,6 @@ add_compile_options(-Wall
     -Wno-unused-variable
     -Wno-unused-function
     -Wno-unused-but-set-variable
-    -Wno-unused-private-field
     -Wno-unused-const-variable
 )
 
@@ -46,6 +43,8 @@ add_executable(tests
     test/index_parser_tests.cpp
     test/expand_tests.cpp
     test/test_utils.cpp
+    test/shape_tests.cpp
+    test/add_tests.cpp
 )
 
 target_link_libraries(tests GTest::gtest_main)

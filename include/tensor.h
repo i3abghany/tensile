@@ -1,3 +1,5 @@
+#pragma once
+
 #include <algorithm>
 #include <array>
 #include <concepts>
@@ -10,10 +12,17 @@
 
 namespace Tensile {
 
+template <typename D, typename S>
+concept CompatibleTypes = (std::floating_point<D> && std::floating_point<S>) ||
+                          (std::integral<D> && std::is_same_v<D, S>);
+
+template <typename D>
+concept TensorType = std::integral<D> || std::floating_point<D>;
+
 static constexpr size_t MAX_DIM = 4;
 
 template <typename DataType>
-requires std::integral<DataType> || std::floating_point<DataType>
+requires TensorType<DataType>
 class Tensor {
 public:
     Tensor()
@@ -49,6 +58,11 @@ public:
 
     Tensor(DataType* data, size_t shape[MAX_DIM])
         : Tensor(data, std::vector<size_t>(shape, shape + MAX_DIM))
+    {
+    }
+
+    Tensor(DataType* data, std::array<size_t, MAX_DIM> shape)
+        : Tensor(data, std::vector<size_t>(shape.begin(), shape.end()))
     {
     }
 
@@ -205,6 +219,61 @@ public:
         n_dims_--;
     }
 
+    template <typename D, typename S>
+    static bool shape_compat(const Tensor<D>& a, const Tensor<S>& b)
+    {
+        auto a_dims = a.n_dims(), b_dims = b.n_dims();
+
+        if (a_dims == b_dims) {
+            for (size_t i = 0; i < a_dims; i++) {
+                if (a.shape()[i] != b.shape()[i] && a.shape()[i] != 1 && b.shape()[i] != 1)
+                    return false;
+            }
+            return true;
+        }
+        // FIXME: Implement the case where one of the tensors has fewer dimensions
+        return false;
+    }
+
+    template <typename OtherDataType>
+    requires CompatibleTypes<DataType, OtherDataType>
+    auto operator+(const Tensor<OtherDataType>& other) -> Tensor<decltype(DataType() + OtherDataType())>
+    {
+        if (!shape_compat(*this, other))
+            throw std::invalid_argument("Incompatible shapes for element-wise addition");
+
+        std::array<size_t, MAX_DIM> shape;
+        for (size_t i = 0; i < n_dims_; i++)
+            shape[i] = std::max(shape_[i], other.shape()[i]);
+
+        for (size_t i = n_dims_; i < MAX_DIM; i++)
+            shape[i] = 0;
+
+        using ResultType = decltype(DataType() + OtherDataType());
+        auto flat_size = std::accumulate(shape.begin(), shape.begin() + n_dims_, 1, std::multiplies<size_t>());
+        auto* result_data = new ResultType[flat_size];
+
+        std::array<size_t, MAX_DIM> iter;
+        for (size_t i = 0; i < MAX_DIM; i++)
+            iter[i] = shape[i] == 0 ? 1 : shape[i];
+
+        Tensor<ResultType> result(result_data, shape);
+
+        for (size_t i = 0; i < iter[0]; i++) {
+            for (size_t j = 0; j < iter[1]; j++) {
+                for (size_t k = 0; k < iter[2]; k++) {
+                    for (size_t l = 0; l < iter[3]; l++) {
+                        size_t aidx = broadcasted_flat_index({ i, j, k, l });
+                        size_t bidx = other.broadcasted_flat_index({ i, j, k, l });
+                        size_t flat_idx = result.multi_indices_to_flat({ i, j, k, l });
+                        result_data[flat_idx] = data_[aidx] + other.data_[bidx];
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
     bool is_empty() const { return n_dims_ == 0; }
 
     const std::array<size_t, MAX_DIM> shape() const { return shape_; }
@@ -228,6 +297,17 @@ private:
             flat_idx += indices[i] * strides_[i];
         }
         return flat_idx + offset_;
+    }
+
+    size_t broadcasted_flat_index(const std::vector<size_t>& indices) const
+    {
+        std::vector<size_t> new_indices;
+        
+        for (size_t i = 0; i < n_dims_; i++) {
+            new_indices.push_back(indices[i] >= shape_[i] && shape_[i] == 1 ? 0 : indices[i]);
+        }
+
+        return multi_indices_to_flat(new_indices);
     }
 
     std::string shape_to_string() const
