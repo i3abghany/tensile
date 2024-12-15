@@ -52,7 +52,39 @@ public:
     {
     }
 
-    const DataType* flat() const { return data_; }
+    // Shallow copy constructor
+    Tensor(const Tensor<DataType>& other)
+        : parent(other.parent)
+        , n_dims_(other.n_dims_)
+        , offset_(other.offset_)
+        , data_(other.data_)
+    {
+        std::copy(other.shape_.begin(), other.shape_.end(), shape_.begin());
+        std::copy(other.strides_.begin(), other.strides_.end(), strides_.begin());
+    }
+
+    Tensor copy() const
+    {
+        Tensor<DataType> new_tensor;
+        new_tensor.data_ = new DataType[size()];
+        new_tensor.n_dims_ = n_dims_;
+        new_tensor.offset_ = 0;
+        new_tensor.parent = nullptr;
+        std::copy(shape_.begin(), shape_.end(), new_tensor.shape_.begin());
+        std::copy(strides_.begin(), strides_.end(), new_tensor.strides_.begin());
+        std::vector<size_t> iter(shape_.size(), 0);
+        std::transform(iter.begin(), iter.end(), [](size_t d) { return d == 0 ? 1 : d; });
+        for (size_t i = 0; i < iter[0]; i++) {
+            for (size_t j = 0; j < iter[1]; j++) {
+                for (size_t k = 0; k < iter[2]; k++) {
+                    for (size_t l = 0; l < iter[3]; l++) {
+                        size_t flat_idx = multi_indices_to_flat({ i, j, k, l });
+                        new_tensor.data_[flat_idx] = data_[flat_idx];
+                    }
+                }
+            }
+        }
+    }
 
     size_t size() const
     {
@@ -123,6 +155,39 @@ public:
         }
         str += "]";
         return str;
+    }
+
+    void expand_dims(size_t axis)
+    {
+        if (axis > n_dims_)
+            throw std::invalid_argument("Axis out of bounds");
+
+        if (n_dims_ == MAX_DIM)
+            throw std::invalid_argument("Cannot expand dimensions");
+
+        for (size_t i = n_dims_; i > axis; i--) {
+            shape_[i] = shape_[i - 1];
+            strides_[i] = strides_[i - 1];
+        }
+
+        shape_[axis] = 1;
+        strides_[axis] = 0;
+        n_dims_++;
+    }
+
+    void squeeze(size_t axis)
+    {
+        if (axis >= n_dims_)
+            throw std::invalid_argument("Axis out of bounds");
+
+        for (size_t i = axis; i < n_dims_ - 1; i++) {
+            shape_[i] = shape_[i + 1];
+            strides_[i] = strides_[i + 1];
+        }
+
+        shape_[n_dims_ - 1] = 0;
+        strides_[n_dims_ - 1] = 0;
+        n_dims_--;
     }
 
     bool is_empty() const { return n_dims_ == 0; }

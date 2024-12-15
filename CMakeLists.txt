@@ -32,6 +32,8 @@ add_executable(tests
     test/init_tests.cpp
     test/slicing_tests.cpp
     test/index_parser_tests.cpp
+    test/expand_tests.cpp
+    test/test_utils.cpp
 )
 
 target_link_libraries(tests GTest::gtest_main)
