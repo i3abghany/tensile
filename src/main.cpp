@@ -14,6 +14,6 @@ int main()
 
     Tensile::Tensor<int> tensor(data, shape);
     auto slice = tensor["0:2, 0:2"];
-    auto logger = Tensile::Log::get_default_logger();
+    auto logger = Tensile::Log::get_ostream_logger();
     logger->log(slice.flat_string());
 }

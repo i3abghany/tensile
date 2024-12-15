@@ -27,16 +27,16 @@ public:
 
     virtual void log(const std::string& message) { stream_ << message << std::endl; }
 
-    static auto get_ostream_logger()
+    static auto get_logger()
     {
-        static std::shared_ptr<LoggerDecorator<std::ostream>> logger = nullptr;
+        static std::shared_ptr<LoggerDecorator<StreamType>> logger = nullptr;
 
         if (logger != nullptr)
             return logger;
 
-        auto created_logger = std::make_shared<Logger<std::ostream>>(std::cout);
-        auto timestame_logger = std::make_shared<TimestampLogger<std::ostream>>(created_logger);
-        auto severity_logger = std::make_shared<SeverityLogger<std::ostream>>(timestame_logger);
+        auto created_logger = std::make_shared<Logger<StreamType>>(std::cout);
+        auto timestame_logger = std::make_shared<TimestampLogger<StreamType>>(created_logger);
+        auto severity_logger = std::make_shared<SeverityLogger<StreamType>>(timestame_logger);
 
         return logger = severity_logger;
     }
@@ -114,6 +114,6 @@ private:
     }
 };
 
-std::shared_ptr<Logger<std::ostream>> get_default_logger();
+std::shared_ptr<Logger<std::ostream>> get_ostream_logger();
 
 }
