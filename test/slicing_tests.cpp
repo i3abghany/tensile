@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "tensor.h"
+#include "test_utils.h"
 
 using std::make_tuple;
 using std::pair;
@@ -11,11 +12,6 @@ using std::string;
 using std::tuple;
 using std::vector;
 using Tensile::Tensor;
-
-size_t flat_size(const vector<size_t>& shape)
-{
-    return std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<size_t>());
-}
 
 // Test fixture for tensor slicing tests. Takes in 4 parameters:
 // 1. The shape of the tensor (std::vector<size_t>).
