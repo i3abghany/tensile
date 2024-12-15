@@ -162,7 +162,7 @@ public:
     void init_strides()
     {
         strides_[n_dims_ - 1] = 1;
-        for (int i = n_dims_ - 2; i >= 0; i--)
+        for (int i = (int)n_dims_ - 2; i >= 0; i--)
             strides_[i] = strides_[i + 1] * shape_[i + 1];
 
         for (int i = MAX_DIM - 1; i >= (int)n_dims_; i--)
@@ -290,7 +290,7 @@ private:
     size_t multi_indices_to_flat(const std::vector<size_t>& indices) const
     {
         size_t flat_idx = 0;
-        for (int i = n_dims_ - 1; i >= 0; i--) {
+        for (int i = (int)n_dims_ - 1; i >= 0; i--) {
             if (indices[i] >= shape_[i] && (shape_[i] != 0 || indices[i] != 0)) {
                 throw std::out_of_range("Index out of bounds");
             }
