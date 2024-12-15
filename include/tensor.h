@@ -13,23 +13,23 @@ namespace Tensile {
 static constexpr size_t MAX_DIM = 4;
 
 template <typename DataType>
-    requires std::integral<DataType> || std::floating_point<DataType>
+requires std::integral<DataType> || std::floating_point<DataType>
 class Tensor {
 public:
     Tensor()
-        : data_(nullptr)
-        , parent(nullptr)
-        , n_dims_(1)
+        : n_dims_(1)
         , offset_(0)
+        , parent(nullptr)
+        , data_(nullptr)
     {
         std::fill(shape_.begin(), shape_.end(), 0);
         std::fill(strides_.begin(), strides_.end(), 0);
     }
 
     Tensor(DataType* data, const std::vector<size_t>& pshape)
-        : parent(nullptr)
-        , n_dims_(0)
+        : n_dims_(0)
         , offset_(0)
+        , parent(nullptr)
         , data_(data)
     {
         if (pshape.size() > MAX_DIM)
@@ -52,15 +52,30 @@ public:
     {
     }
 
-    // Shallow copy constructor
     Tensor(const Tensor<DataType>& other)
-        : parent(other.parent)
-        , n_dims_(other.n_dims_)
+        : n_dims_(other.n_dims_)
         , offset_(other.offset_)
+        , parent(other.parent)
         , data_(other.data_)
     {
         std::copy(other.shape_.begin(), other.shape_.end(), shape_.begin());
         std::copy(other.strides_.begin(), other.strides_.end(), strides_.begin());
+    }
+
+    Tensor& operator=(const Tensor<DataType>& other)
+    {
+        if (this == &other)
+            return *this;
+
+        n_dims_ = other.n_dims_;
+        offset_ = other.offset_;
+        parent = other.parent;
+        data_ = other.data_;
+
+        std::copy(other.shape_.begin(), other.shape_.end(), shape_.begin());
+        std::copy(other.strides_.begin(), other.strides_.end(), strides_.begin());
+
+        return *this;
     }
 
     Tensor copy() const
@@ -96,7 +111,7 @@ public:
 
     Tensor<DataType> operator[](const std::string& indices)
     {
-        std::vector<std::pair<size_t, size_t>> parsed_indices = parse_indices(indices);
+        auto parsed_indices = parse_indices(indices);
         return operator[](parsed_indices);
     }
 
@@ -220,15 +235,6 @@ private:
         std::string str = "[";
         for (size_t i = 0; i < MAX_DIM; i++)
             str += std::to_string(shape_[i]) + ", ";
-        str += "]";
-        return str;
-    }
-
-    std::string indices_to_string(const std::vector<size_t>& indices) const
-    {
-        std::string str = "[";
-        for (size_t i = 0; i < indices.size(); i++)
-            str += std::to_string(indices[i]) + ", ";
         str += "]";
         return str;
     }

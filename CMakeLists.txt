@@ -18,6 +18,18 @@ set(CMAKE_CXX_COMPILER /usr/bin/g++-10)
 
 include_directories(include)
 
+add_compile_options(-Wall
+    -Wextra
+    -Wpedantic
+    -Werror
+    -Wno-unused-parameter
+    -Wno-unused-variable
+    -Wno-unused-function
+    -Wno-unused-but-set-variable
+    -Wno-unused-private-field
+    -Wno-unused-const-variable
+)
+
 add_executable(tensile
     src/main.cpp
     src/index_parser.cpp

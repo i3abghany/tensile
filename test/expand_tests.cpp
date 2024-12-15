@@ -41,7 +41,7 @@ TEST_P(ExpandDimsTest, ExpandDims)
 {
     tensor->expand_dims(axis);
     ASSERT_EQ(tensor->n_dims(), expected_shape.size());
-    for (int i = 0; i < tensor->n_dims(); i++)
+    for (size_t i = 0; i < tensor->n_dims(); i++)
         ASSERT_EQ(tensor->shape()[i], expected_shape[i]);
 };
 
@@ -136,7 +136,7 @@ TEST_P(SqueezeTest, Squeeze)
 {
     tensor->squeeze(axis);
     ASSERT_EQ(tensor->n_dims(), expected_shape.size());
-    for (int i = 0; i < tensor->n_dims(); i++)
+    for (size_t i = 0; i < tensor->n_dims(); i++)
         ASSERT_EQ(tensor->shape()[i], expected_shape[i]);
 };
 

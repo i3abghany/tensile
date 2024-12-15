@@ -40,7 +40,7 @@ protected:
 
         data = new int[len];
 
-        for (int i = 0; i < len; i++)
+        for (size_t i = 0; i < len; i++)
             data[i] = i;
 
         tensor = new Tensor<int>(data, shape);
@@ -55,7 +55,7 @@ TEST_P(TensorSlicingTest, Slicing)
 {
     ASSERT_EQ(sliced_tensor.n_dims(), expected_shape.size());
     ASSERT_EQ(sliced_tensor.size(), flat_size(expected_shape));
-    for (int i = 0; i < sliced_tensor.n_dims(); i++)
+    for (size_t i = 0; i < sliced_tensor.n_dims(); i++)
         ASSERT_EQ(sliced_tensor.shape()[i], expected_shape[i]);
     ASSERT_EQ(sliced_tensor.flat_string(), expected_values);
 };
@@ -123,7 +123,7 @@ protected:
 
         data = new int[len];
 
-        for (int i = 0; i < len; i++)
+        for (size_t i = 0; i < len; i++)
             data[i] = i;
 
         tensor = new Tensor<int>(data, shape);
@@ -138,7 +138,7 @@ TEST_P(TensorStringSliceTest, StringSlicing)
 {
     ASSERT_EQ(sliced_tensor.n_dims(), expected_shape.size());
     ASSERT_EQ(sliced_tensor.size(), flat_size(expected_shape));
-    for (int i = 0; i < sliced_tensor.n_dims(); i++)
+    for (size_t i = 0; i < sliced_tensor.n_dims(); i++)
         ASSERT_EQ(sliced_tensor.shape()[i], expected_shape[i]);
     ASSERT_EQ(sliced_tensor.flat_string(), expected_values);
 };
