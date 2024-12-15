@@ -20,11 +20,6 @@ add_compile_options(-Wall
     -Wextra
     -Wpedantic
     -Werror
-    -Wno-unused-parameter
-    -Wno-unused-variable
-    -Wno-unused-function
-    -Wno-unused-but-set-variable
-    -Wno-unused-const-variable
 )
 
 add_executable(tensile
