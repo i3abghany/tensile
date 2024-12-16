@@ -24,5 +24,4 @@ int main()
 
     auto result = tensor + other;
     Tensile::Log::get_ostream_logger()->log("Result: " + result.flat_string());
-
 }

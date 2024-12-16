@@ -23,8 +23,8 @@ Tensor<int> create_tensor(const vector<size_t>& shape)
 
 TEST(AddTensorTest, AddEmptyTensor)
 {
-    auto tensor1 = create_tensor({0, 0});
-    auto tensor2 = create_tensor({0, 0});
+    auto tensor1 = create_tensor({ 0, 0 });
+    auto tensor2 = create_tensor({ 0, 0 });
     auto result = tensor1 + tensor2;
     ASSERT_EQ(result.n_dims(), 0);
     ASSERT_EQ(result.is_empty(), true);
@@ -32,8 +32,8 @@ TEST(AddTensorTest, AddEmptyTensor)
 
 TEST(AddTensorTest, AddSingleDimensionalTensor)
 {
-    auto tensor1 = create_tensor({5});
-    auto tensor2 = create_tensor({5});
+    auto tensor1 = create_tensor({ 5 });
+    auto tensor2 = create_tensor({ 5 });
 
     auto result = tensor1 + tensor2;
 
@@ -45,8 +45,8 @@ TEST(AddTensorTest, AddSingleDimensionalTensor)
 
 TEST(AddTensorTest, AddTwoDimensionalTensor)
 {
-    auto tensor1 = create_tensor({3, 3});
-    auto tensor2 = create_tensor({3, 3});
+    auto tensor1 = create_tensor({ 3, 3 });
+    auto tensor2 = create_tensor({ 3, 3 });
 
     auto result = tensor1 + tensor2;
 
@@ -59,8 +59,8 @@ TEST(AddTensorTest, AddTwoDimensionalTensor)
 
 TEST(AddTensorTest, AddSingleDimensionalTensorWithDifferentSizes)
 {
-    auto tensor1 = create_tensor({3, 1});
-    auto tensor2 = create_tensor({3, 3});
+    auto tensor1 = create_tensor({ 3, 1 });
+    auto tensor2 = create_tensor({ 3, 3 });
 
     auto result = tensor1 + tensor2;
 
@@ -75,8 +75,8 @@ TEST(AddTensorTest, AddSingleDimensionalTensorWithDifferentSizes)
 
 TEST(AddTensorTest, AddTwoDimensionalTensorWithDifferentSizes)
 {
-    auto tensor1 = create_tensor({3, 1});
-    auto tensor2 = create_tensor({1, 3});
+    auto tensor1 = create_tensor({ 3, 1 });
+    auto tensor2 = create_tensor({ 1, 3 });
 
     auto result = tensor1 + tensor2;
 

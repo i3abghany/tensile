@@ -13,18 +13,18 @@ TEST(TensorInitialization, DefaultConstructor)
 
 TEST(TensorInitialization, ConstructorWithShape)
 {
-    auto tensor1 = Tensor<int>(nullptr, std::vector<size_t>{ 2, 3 });
+    auto tensor1 = Tensor<int>(nullptr, std::vector<size_t> { 2, 3 });
     EXPECT_EQ(tensor1.size(), 6);
     EXPECT_EQ(tensor1.shape()[0], 2);
     EXPECT_EQ(tensor1.shape()[1], 3);
 
-    auto tensor2 = Tensor<int>(nullptr, std::vector<size_t>{ 2, 3, 4 });
+    auto tensor2 = Tensor<int>(nullptr, std::vector<size_t> { 2, 3, 4 });
     EXPECT_EQ(tensor2.size(), 24);
     EXPECT_EQ(tensor2.shape()[0], 2);
     EXPECT_EQ(tensor2.shape()[1], 3);
     EXPECT_EQ(tensor2.shape()[2], 4);
 
-    auto tensor3 = Tensor<int>(nullptr, std::vector<size_t>{ 2, 3, 4, 5 });
+    auto tensor3 = Tensor<int>(nullptr, std::vector<size_t> { 2, 3, 4, 5 });
     EXPECT_EQ(tensor3.size(), 120);
     EXPECT_EQ(tensor3.shape()[0], 2);
     EXPECT_EQ(tensor3.shape()[1], 3);
