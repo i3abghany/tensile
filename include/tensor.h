@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <concepts>
 #include <cstdint>
 #include <numeric>
@@ -26,7 +27,7 @@ template <typename DataType>
 class Tensor {
 public:
     Tensor()
-        : n_dims_(1)
+        : n_dims_(0)
         , offset_(0)
         , parent(nullptr)
         , data_(nullptr)
@@ -44,15 +45,8 @@ public:
         if (pshape.size() > MAX_DIM)
             throw std::invalid_argument("Tensor shape cannot have more than 4 dimensions");
 
-        n_dims_ = pshape.size();
-        for (int i = pshape.size() - 1; i >= 0; i--)
-            if (pshape[i] == 0)
-                n_dims_--;
-
+        n_dims_ = get_n_dims_from_shape(pshape);
         std::copy(pshape.begin(), pshape.end(), shape_.begin());
-        for (size_t i = pshape.size(); i < MAX_DIM; i++)
-            shape_[i] = 0;
-
         init_strides();
     }
 
@@ -118,7 +112,7 @@ public:
     size_t size() const
     {
         size_t size = 1;
-        for (size_t i = 0; i < n_dims_; i++)
+        for (size_t i = 0; i < std::max(1UL, n_dims_); i++)
             size *= shape_[i];
         return size;
     }
@@ -161,12 +155,14 @@ public:
 
     void init_strides()
     {
+        std::fill(strides_.begin(), strides_.end(), 0);
+        if (n_dims_ == 0) {
+            return;
+        }
+
         strides_[n_dims_ - 1] = 1;
         for (int i = (int)n_dims_ - 2; i >= 0; i--)
             strides_[i] = strides_[i + 1] * shape_[i + 1];
-
-        for (int i = MAX_DIM - 1; i >= (int)n_dims_; i--)
-            strides_[i] = 0;
     }
 
     std::string flat_string() const
@@ -287,20 +283,13 @@ private:
         if (!shape_compat(*this, other))
             throw std::invalid_argument("Incompatible shapes for element-wise operation");
 
-        std::array<size_t, MAX_DIM> shape;
-        for (size_t i = 0; i < n_dims_; i++)
-            shape[i] = std::max(shape_[i], other.shape()[i]);
-
-        for (size_t i = n_dims_; i < MAX_DIM; i++)
-            shape[i] = 0;
+        auto shape = get_broadcasted_shape(other.shape());
+        auto result_n_dims = get_n_dims_from_shape(shape);
+        auto iter = get_iter_shape(shape);
 
         using ResultType = decltype(DataType() + OtherDataType());
-        auto flat_size = std::accumulate(shape.begin(), shape.begin() + n_dims_, 1, std::multiplies<size_t>());
+        auto flat_size = std::accumulate(shape.begin(), shape.begin() + result_n_dims, 1, std::multiplies<size_t>());
         auto* result_data = new ResultType[flat_size];
-
-        std::array<size_t, MAX_DIM> iter;
-        for (size_t i = 0; i < MAX_DIM; i++)
-            iter[i] = shape[i] == 0 ? 1 : shape[i];
 
         Tensor<ResultType> result(result_data, shape);
 
@@ -328,6 +317,38 @@ private:
     }
 
 private:
+    template <typename Iterable> static size_t get_n_dims_from_shape(const Iterable& shape)
+    {
+        assert(shape.size() <= MAX_DIM);
+        size_t n_dims = shape.size();
+        for (int i = shape.size() - 1; i >= 0; i--)
+            if (shape[i] == 0)
+                n_dims--;
+        return n_dims;
+    }
+
+    static std::array<size_t, MAX_DIM> get_iter_shape(const std::array<size_t, MAX_DIM>& s)
+    {
+        std::array<size_t, MAX_DIM> iter;
+        for (size_t i = 0; i < MAX_DIM; i++)
+            iter[i] = s[i] == 0 ? 1 : s[i];
+        return iter;
+    }
+
+    // FIXME: doesn't work when tensors have different number of dimensions
+    std::array<size_t, MAX_DIM> get_broadcasted_shape(const std::array<size_t, MAX_DIM>& s2) const
+    {
+        assert(get_n_dims_from_shape(s2) == n_dims_);
+        std::array<size_t, MAX_DIM> shape;
+        for (size_t i = 0; i < n_dims_; i++)
+            shape[i] = std::max(shape_[i], s2[i]);
+
+        for (size_t i = n_dims_; i < MAX_DIM; i++)
+            shape[i] = 0;
+
+        return shape;
+    }
+
     size_t multi_indices_to_flat(const std::vector<size_t>& indices) const
     {
         size_t flat_idx = 0;
@@ -361,12 +382,12 @@ private:
     }
 
 private:
-    std::array<size_t, MAX_DIM> shape_;
-    std::array<size_t, MAX_DIM> strides_;
-    size_t n_dims_;
-    size_t offset_;
-    Tensor<DataType>* parent;
-    DataType* data_;
+    std::array<size_t, MAX_DIM> shape_ { 0 };
+    std::array<size_t, MAX_DIM> strides_ { 0 };
+    size_t n_dims_ { 0 };
+    size_t offset_ { 0 };
+    Tensor<DataType>* parent { nullptr };
+    DataType* data_ { nullptr };
 };
 
 }
