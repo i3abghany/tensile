@@ -121,6 +121,31 @@ public:
         return operator[](parsed_indices);
     }
 
+    DataType item() const
+    {
+        if (n_dims_ != 1 || shape_[0] != 1)
+            throw std::invalid_argument("Can only call item() on a 1D tensor with one element");
+        return data_[offset_];
+    }
+
+    DataType& operator[](const std::vector<size_t>& indices)
+    {
+        if (indices.size() != n_dims_)
+            throw std::invalid_argument("Number of indices does not match the number of dimensions");
+
+        size_t flat_idx = multi_indices_to_flat(indices);
+        return data_[flat_idx];
+    }
+
+    DataType operator[](const std::vector<size_t>& indices) const
+    {
+        if (indices.size() != n_dims_)
+            throw std::invalid_argument("Number of indices does not match the number of dimensions");
+
+        size_t flat_idx = multi_indices_to_flat(indices);
+        return data_[flat_idx];
+    }
+
     Tensor<DataType> operator[](const std::vector<std::pair<size_t, size_t>>& indices)
     {
         if (indices.size() != n_dims_)
