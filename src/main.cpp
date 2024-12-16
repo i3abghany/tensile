@@ -6,22 +6,15 @@
 
 int main()
 {
-    int* data = new int[9];
-    std::vector<size_t> shape = { 3, 3 };
-    for (int i = 0; i < 9; i++) {
-        data[i] = i;
-    }
+    std::vector<size_t> s1 = { 3, 4 }, s2 = { 4, 3 };
+    auto get_data = [](size_t i, size_t j) {
+        int* data = new int[i * j];
+        std::iota(data, data + i * j, 1);
+        return data;
+    };
+    auto d1 = get_data(s1[0], s1[1]), d2 = get_data(s2[0], s2[1]);
+    Tensile::Tensor<int> t1(d1, s1), t2(d2, s2);
 
-    Tensile::Tensor<int> tensor(data, shape);
-
-    shape = { 3, 1 };
-    data = new int[3];
-    for (int i = 0; i < 3; i++) {
-        data[i] = i;
-    }
-
-    Tensile::Tensor<int> other(data, shape);
-
-    auto result = tensor + other;
+    auto result = t1 * t2; // matmul
     Tensile::Log::get_ostream_logger()->log("Result: " + result.flat_string());
 }

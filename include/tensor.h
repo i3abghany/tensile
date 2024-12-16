@@ -11,6 +11,7 @@
 #include "enumerate.h"
 #include "index_parser.h"
 #include "logger.h"
+#include "unimpl.h"
 
 namespace Tensile {
 
@@ -56,7 +57,8 @@ public:
     {
     }
 
-    Tensor(DataType* data, std::array<size_t, MAX_DIM> shape)
+    template <size_t N>
+    Tensor(DataType* data, std::array<size_t, N> shape)
         : Tensor(data, std::vector<size_t>(shape.begin(), shape.end()))
     {
     }
@@ -118,6 +120,31 @@ public:
     {
         auto parsed_indices = parse_indices(indices);
         return operator[](parsed_indices);
+    }
+
+    DataType item() const
+    {
+        if (n_dims_ != 1 || shape_[0] != 1)
+            throw std::invalid_argument("Can only call item() on a 1D tensor with one element");
+        return data_[offset_];
+    }
+
+    DataType& operator[](const std::vector<size_t>& indices)
+    {
+        if (indices.size() != n_dims_)
+            throw std::invalid_argument("Number of indices does not match the number of dimensions");
+
+        size_t flat_idx = multi_indices_to_flat(indices);
+        return data_[flat_idx];
+    }
+
+    DataType operator[](const std::vector<size_t>& indices) const
+    {
+        if (indices.size() != n_dims_)
+            throw std::invalid_argument("Number of indices does not match the number of dimensions");
+
+        size_t flat_idx = multi_indices_to_flat(indices);
+        return data_[flat_idx];
     }
 
     Tensor<DataType> operator[](const std::vector<std::pair<size_t, size_t>>& indices)
@@ -208,6 +235,18 @@ public:
         n_dims_--;
     }
 
+    template <typename D, typename S> static bool matmul_compat(const Tensor<D>& a, const Tensor<S>& b)
+    {
+        if (a.n_dims() == 2 && b.n_dims() == 2) {
+            return a.shape()[1] == b.shape()[0];
+        } else if (a.n_dims() == 3 && b.n_dims() == 3) {
+            return a.shape()[2] == b.shape()[1]
+                && (a.shape()[0] == b.shape()[0] || a.shape()[0] == 1 || b.shape()[0] == 1);
+        }
+
+        UNIMPLEMENTED("Matmul only implemented for tensors of the same number of dimensions");
+    }
+
     template <typename D, typename S> static bool shape_compat(const Tensor<D>& a, const Tensor<S>& b)
     {
         auto a_dims = a.n_dims(), b_dims = b.n_dims();
@@ -219,7 +258,9 @@ public:
             }
             return true;
         }
-        // FIXME: Implement the case where one of the tensors has fewer dimensions
+
+        // FIXME: broadcasting not implemented for tensors with different number
+        // of dimensions. For now we just return false
         return false;
     }
 
@@ -243,6 +284,20 @@ public:
         return binary_broadcastable_elementwise_op(other, op);
     }
 
+    template <typename OtherDataType>
+        requires CompatibleTypes<DataType, OtherDataType>
+    auto operator*(const Tensor<OtherDataType>& other) -> Tensor<decltype(DataType() * OtherDataType())>
+    {
+        if (!matmul_compat(*this, other))
+            throw std::invalid_argument("Incompatible shapes for matrix multiplication");
+
+        if (n_dims() == 2 && other.n_dims() == 2) {
+            return matmul2d(other);
+        }
+
+        UNIMPLEMENTED("Matmul is only implemented for 2D tensors");
+    }
+
     Tensor<DataType> operator+() const
     {
         return copy(); // identity operation
@@ -264,6 +319,33 @@ public:
     {
         if (parent == nullptr)
             delete[] data_;
+    }
+
+private:
+    template <typename OtherDataType>
+        requires CompatibleTypes<DataType, OtherDataType>
+    auto matmul2d(const Tensor<OtherDataType>& other) -> Tensor<decltype(DataType() * OtherDataType())>
+    {
+        assert(n_dims() == 2 && other.n_dims() == 2 && matmul_compat(*this, other));
+
+        size_t a = shape()[0], b = shape()[1];
+        size_t d = other.shape()[1];
+
+        using ResultType = decltype(DataType() * OtherDataType());
+        auto* result_data = new ResultType[a * d];
+        Tensor<ResultType> result(result_data, { a, d });
+
+        for (size_t i = 0; i < a; i++) {
+            for (size_t j = 0; j < d; j++) {
+                ResultType sum = 0;
+                for (size_t k = 0; k < b; k++) {
+                    sum += (*this)[std::vector { i, k }] * other[std::vector { k, j }];
+                }
+                result[std::vector { i, j }] = sum;
+            }
+        }
+
+        return result;
     }
 
 private:
@@ -326,7 +408,8 @@ private:
     // FIXME: doesn't work when tensors have different number of dimensions
     std::array<size_t, MAX_DIM> get_broadcasted_shape(const std::array<size_t, MAX_DIM>& s2) const
     {
-        assert(get_n_dims_from_shape(s2) == n_dims_);
+        UNIMPLEMENTED_IF(get_n_dims_from_shape(s2) != n_dims_,
+                         "Broadcasting not implemented for tensors with different number of dimensions");
         std::array<size_t, MAX_DIM> shape;
         for (size_t i = 0; i < n_dims_; i++)
             shape[i] = std::max(shape_[i], s2[i]);
