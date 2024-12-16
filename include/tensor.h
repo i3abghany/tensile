@@ -13,8 +13,8 @@
 namespace Tensile {
 
 template <typename D, typename S>
-concept CompatibleTypes = (std::floating_point<D> && std::floating_point<S>) ||
-                          (std::integral<D> && std::is_same_v<D, S>);
+concept CompatibleTypes
+    = (std::floating_point<D> && std::floating_point<S>) || (std::integral<D> && std::is_same_v<D, S>);
 
 template <typename D>
 concept TensorType = std::integral<D> || std::floating_point<D>;
@@ -22,7 +22,7 @@ concept TensorType = std::integral<D> || std::floating_point<D>;
 static constexpr size_t MAX_DIM = 4;
 
 template <typename DataType>
-requires TensorType<DataType>
+    requires TensorType<DataType>
 class Tensor {
 public:
     Tensor()
@@ -219,8 +219,7 @@ public:
         n_dims_--;
     }
 
-    template <typename D, typename S>
-    static bool shape_compat(const Tensor<D>& a, const Tensor<S>& b)
+    template <typename D, typename S> static bool shape_compat(const Tensor<D>& a, const Tensor<S>& b)
     {
         auto a_dims = a.n_dims(), b_dims = b.n_dims();
 
@@ -236,11 +235,36 @@ public:
     }
 
     template <typename OtherDataType>
-    requires CompatibleTypes<DataType, OtherDataType>
+        requires CompatibleTypes<DataType, OtherDataType>
     auto operator+(const Tensor<OtherDataType>& other) -> Tensor<decltype(DataType() + OtherDataType())>
     {
+        using ResultDataType = decltype(DataType() + OtherDataType());
+        std::function<ResultDataType(DataType, OtherDataType)> op
+            = [](DataType a, OtherDataType b) -> ResultDataType { return a + b; };
+        return binary_broadcastable_elementwise_op(other, op);
+    }
+
+    bool is_empty() const { return n_dims_ == 0; }
+
+    const std::array<size_t, MAX_DIM> shape() const { return shape_; }
+
+    size_t n_dims() const { return n_dims_; }
+
+    ~Tensor()
+    {
+        if (parent == nullptr)
+            delete[] data_;
+    }
+
+private:
+    template <typename OtherDataType>
+        requires CompatibleTypes<DataType, OtherDataType>
+    auto binary_broadcastable_elementwise_op(
+        const Tensor<OtherDataType>& other,
+        std::function<decltype(DataType() + OtherDataType())(DataType, OtherDataType)> op)
+    {
         if (!shape_compat(*this, other))
-            throw std::invalid_argument("Incompatible shapes for element-wise addition");
+            throw std::invalid_argument("Incompatible shapes for element-wise operation");
 
         std::array<size_t, MAX_DIM> shape;
         for (size_t i = 0; i < n_dims_; i++)
@@ -266,24 +290,12 @@ public:
                         size_t aidx = broadcasted_flat_index({ i, j, k, l });
                         size_t bidx = other.broadcasted_flat_index({ i, j, k, l });
                         size_t flat_idx = result.multi_indices_to_flat({ i, j, k, l });
-                        result_data[flat_idx] = data_[aidx] + other.data_[bidx];
+                        result_data[flat_idx] = op(data_[aidx], other.data_[bidx]);
                     }
                 }
             }
         }
         return result;
-    }
-
-    bool is_empty() const { return n_dims_ == 0; }
-
-    const std::array<size_t, MAX_DIM> shape() const { return shape_; }
-
-    size_t n_dims() const { return n_dims_; }
-
-    ~Tensor()
-    {
-        if (parent == nullptr)
-            delete[] data_;
     }
 
 private:
@@ -302,7 +314,7 @@ private:
     size_t broadcasted_flat_index(const std::vector<size_t>& indices) const
     {
         std::vector<size_t> new_indices;
-        
+
         for (size_t i = 0; i < n_dims_; i++) {
             new_indices.push_back(indices[i] >= shape_[i] && shape_[i] == 1 ? 0 : indices[i]);
         }
