@@ -58,7 +58,7 @@ TEST_P(TensorSlicingTest, Slicing)
     for (size_t i = 0; i < sliced_tensor.n_dims(); i++)
         ASSERT_EQ(sliced_tensor.shape()[i], expected_shape[i]);
     ASSERT_EQ(sliced_tensor.flat_string(), expected_values);
-};
+}
 
 INSTANTIATE_TEST_SUITE_P(
     TensorSlicingTests, TensorSlicingTest,
@@ -141,7 +141,7 @@ TEST_P(TensorStringSliceTest, StringSlicing)
     for (size_t i = 0; i < sliced_tensor.n_dims(); i++)
         ASSERT_EQ(sliced_tensor.shape()[i], expected_shape[i]);
     ASSERT_EQ(sliced_tensor.flat_string(), expected_values);
-};
+}
 
 INSTANTIATE_TEST_SUITE_P(
     TensorStringSlicingTests, TensorStringSliceTest,

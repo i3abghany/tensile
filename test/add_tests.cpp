@@ -28,7 +28,7 @@ TEST(AddTensorTest, AddEmptyTensor)
     auto result = tensor1 + tensor2;
     ASSERT_EQ(result.n_dims(), 0);
     ASSERT_EQ(result.is_empty(), true);
-};
+}
 
 TEST(AddTensorTest, AddSingleDimensionalTensor)
 {
@@ -41,7 +41,7 @@ TEST(AddTensorTest, AddSingleDimensionalTensor)
     ASSERT_EQ(result.size(), 5);
     ASSERT_EQ(result.shape()[0], 5);
     ASSERT_EQ(result.flat_string(), "[0, 2, 4, 6, 8, ]");
-};
+}
 
 TEST(AddTensorTest, AddTwoDimensionalTensor)
 {
@@ -55,7 +55,7 @@ TEST(AddTensorTest, AddTwoDimensionalTensor)
     ASSERT_EQ(result.shape()[0], 3);
     ASSERT_EQ(result.shape()[1], 3);
     ASSERT_EQ(result.flat_string(), "[0, 2, 4, 6, 8, 10, 12, 14, 16, ]");
-};
+}
 
 TEST(AddTensorTest, AddSingleDimensionalTensorWithDifferentSizes)
 {
@@ -71,7 +71,7 @@ TEST(AddTensorTest, AddSingleDimensionalTensorWithDifferentSizes)
     ASSERT_EQ(result.shape()[1], 3);
 
     ASSERT_EQ(result.flat_string(), "[0, 1, 2, 4, 5, 6, 8, 9, 10, ]");
-};
+}
 
 TEST(AddTensorTest, AddTwoDimensionalTensorWithDifferentSizes)
 {
@@ -87,4 +87,4 @@ TEST(AddTensorTest, AddTwoDimensionalTensorWithDifferentSizes)
     ASSERT_EQ(result.shape()[1], 3);
 
     ASSERT_EQ(result.flat_string(), "[0, 1, 2, 1, 2, 3, 2, 3, 4, ]");
-};
+}

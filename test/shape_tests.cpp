@@ -46,7 +46,7 @@ TEST_P(TensorShapeCompatibilityTest, ShapeCompatibility)
         ASSERT_TRUE(Tensor<int>::shape_compat(*tensor_a, *tensor_b));
     else
         ASSERT_FALSE(Tensor<int>::shape_compat(*tensor_a, *tensor_b));
-};
+}
 
 INSTANTIATE_TEST_SUITE_P(
     TensorShapeCompatibilityTests, TensorShapeCompatibilityTest,

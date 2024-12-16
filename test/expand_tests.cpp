@@ -43,7 +43,7 @@ TEST_P(ExpandDimsTest, ExpandDims)
     ASSERT_EQ(tensor->n_dims(), expected_shape.size());
     for (size_t i = 0; i < tensor->n_dims(); i++)
         ASSERT_EQ(tensor->shape()[i], expected_shape[i]);
-};
+}
 
 INSTANTIATE_TEST_SUITE_P(
     TensorExpandDimsTests, ExpandDimsTest,
@@ -87,7 +87,7 @@ protected:
 TEST_P(ExpandDimsThrowsTest, ExpandDimsThrows)
 {
     EXPECT_THROW(tensor->expand_dims(axis), std::invalid_argument);
-};
+}
 
 INSTANTIATE_TEST_SUITE_P(
     TensorExpandDimsThrowsTests, ExpandDimsThrowsTest,
@@ -138,7 +138,7 @@ TEST_P(SqueezeTest, Squeeze)
     ASSERT_EQ(tensor->n_dims(), expected_shape.size());
     for (size_t i = 0; i < tensor->n_dims(); i++)
         ASSERT_EQ(tensor->shape()[i], expected_shape[i]);
-};
+}
 
 INSTANTIATE_TEST_SUITE_P(
     TensorSqueezeTests, SqueezeTest,
