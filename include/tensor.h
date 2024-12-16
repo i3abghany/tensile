@@ -56,7 +56,8 @@ public:
     {
     }
 
-    Tensor(DataType* data, std::array<size_t, MAX_DIM> shape)
+    template <size_t N>
+    Tensor(DataType* data, std::array<size_t, N> shape)
         : Tensor(data, std::vector<size_t>(shape.begin(), shape.end()))
     {
     }
