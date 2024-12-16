@@ -43,6 +43,7 @@ add_executable(tests
     test/test_utils.cpp
     test/shape_tests.cpp
     test/add_tests.cpp
+    test/matmul2d_tests.cpp
 )
 
 target_link_libraries(tests GTest::gtest_main)
