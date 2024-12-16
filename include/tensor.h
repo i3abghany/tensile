@@ -8,6 +8,7 @@
 #include <numeric>
 #include <utility>
 
+#include "enumerate.h"
 #include "index_parser.h"
 #include "logger.h"
 
@@ -93,19 +94,15 @@ public:
         new_tensor.n_dims_ = n_dims_;
         new_tensor.offset_ = 0;
         new_tensor.parent = nullptr;
+
         std::copy(shape_.begin(), shape_.end(), new_tensor.shape_.begin());
         std::copy(strides_.begin(), strides_.end(), new_tensor.strides_.begin());
-        std::vector<size_t> iter(shape_.size(), 0);
-        std::transform(iter.begin(), iter.end(), [](size_t d) { return d == 0 ? 1 : d; });
-        for (size_t i = 0; i < iter[0]; i++) {
-            for (size_t j = 0; j < iter[1]; j++) {
-                for (size_t k = 0; k < iter[2]; k++) {
-                    for (size_t l = 0; l < iter[3]; l++) {
-                        size_t flat_idx = multi_indices_to_flat({ i, j, k, l });
-                        new_tensor.data_[flat_idx] = data_[flat_idx];
-                    }
-                }
-            }
+
+        auto iter = get_iter_shape(shape_);
+        ENUMERATE(iter, i, j, k, l)
+        {
+            size_t flat_idx = multi_indices_to_flat({ i, j, k, l });
+            new_tensor.data_[flat_idx] = data_[flat_idx];
         }
     }
 
@@ -156,9 +153,8 @@ public:
     void init_strides()
     {
         std::fill(strides_.begin(), strides_.end(), 0);
-        if (n_dims_ == 0) {
+        if (n_dims_ == 0)
             return;
-        }
 
         strides_[n_dims_ - 1] = 1;
         for (int i = (int)n_dims_ - 2; i >= 0; i--)
@@ -167,17 +163,15 @@ public:
 
     std::string flat_string() const
     {
+        auto iter = get_iter_shape(shape_);
         std::string str = "[";
-        for (size_t i = 0; i < ((shape_[0] == 0) ? 1 : shape_[0]) && !is_empty(); i++) {
-            for (size_t j = 0; j < ((shape_[1] == 0) ? 1 : shape_[1]); j++) {
-                for (size_t k = 0; k < ((shape_[2] == 0) ? 1 : shape_[2]); k++) {
-                    for (size_t l = 0; l < ((shape_[3] == 0) ? 1 : shape_[3]); l++) {
-                        size_t flat_idx = multi_indices_to_flat({ i, j, k, l });
-                        str += std::to_string(data_[flat_idx]) + ", ";
-                    }
-                }
-            }
+
+        ENUMERATE(iter, i, j, k, l)
+        {
+            auto flat_idx = multi_indices_to_flat({ i, j, k, l });
+            str += std::to_string(data_[flat_idx]) + ", ";
         }
+
         str += "]";
         return str;
     }
@@ -186,7 +180,6 @@ public:
     {
         if (axis > n_dims_)
             throw std::invalid_argument("Axis out of bounds");
-
         if (n_dims_ == MAX_DIM)
             throw std::invalid_argument("Cannot expand dimensions");
 
@@ -293,17 +286,12 @@ private:
 
         Tensor<ResultType> result(result_data, shape);
 
-        for (size_t i = 0; i < iter[0]; i++) {
-            for (size_t j = 0; j < iter[1]; j++) {
-                for (size_t k = 0; k < iter[2]; k++) {
-                    for (size_t l = 0; l < iter[3]; l++) {
-                        size_t aidx = broadcasted_flat_index({ i, j, k, l });
-                        size_t bidx = other.broadcasted_flat_index({ i, j, k, l });
-                        size_t flat_idx = result.multi_indices_to_flat({ i, j, k, l });
-                        result_data[flat_idx] = op(data_[aidx], other.data_[bidx]);
-                    }
-                }
-            }
+        ENUMERATE(iter, i, j, k, l)
+        {
+            size_t aidx = broadcasted_flat_index({ i, j, k, l });
+            size_t bidx = other.broadcasted_flat_index({ i, j, k, l });
+            size_t flat_idx = result.multi_indices_to_flat({ i, j, k, l });
+            result_data[flat_idx] = op(data_[aidx], other.data_[bidx]);
         }
         return result;
     }
