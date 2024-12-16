@@ -26,12 +26,15 @@ add_executable(tensile
     src/main.cpp
     src/index_parser.cpp
     src/logger.cpp
+    src/unimpl.cpp
 )
 
 enable_testing()
 
 add_executable(tests
     src/index_parser.cpp
+    src/unimpl.cpp
+    src/logger.cpp
 
     test/init_tests.cpp
     test/slicing_tests.cpp
