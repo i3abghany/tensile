@@ -244,6 +244,27 @@ public:
         return binary_broadcastable_elementwise_op(other, op);
     }
 
+    template <typename OtherDataType>
+        requires CompatibleTypes<DataType, OtherDataType>
+    auto operator-(const Tensor<OtherDataType>& other) -> Tensor<decltype(DataType() - OtherDataType())>
+    {
+        using ResultDataType = decltype(DataType() - OtherDataType());
+        std::function<ResultDataType(DataType, OtherDataType)> op
+            = [](DataType a, OtherDataType b) -> ResultDataType { return a - b; };
+        return binary_broadcastable_elementwise_op(other, op);
+    }
+
+    Tensor<DataType> operator+() const
+    {
+        return copy(); // identity operation
+    }
+
+    Tensor<DataType> operator-() const
+    {
+        std::function<DataType(DataType)> op = [](DataType a) -> DataType { return -a; };
+        return unary_op(op);
+    }
+
     bool is_empty() const { return n_dims_ == 0; }
 
     const std::array<size_t, MAX_DIM> shape() const { return shape_; }
@@ -296,6 +317,14 @@ private:
             }
         }
         return result;
+    }
+
+    auto unary_op(std::function<DataType(DataType)> op) -> Tensor<DataType>
+    {
+        auto new_tensor = copy();
+        for (size_t i = 0; i < new_tensor.size(); i++)
+            new_tensor.data_[i] = op(new_tensor.data_[i]);
+        return new_tensor;
     }
 
 private:

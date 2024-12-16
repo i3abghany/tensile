@@ -10,17 +10,6 @@ using std::tuple;
 using std::vector;
 using Tensile::Tensor;
 
-Tensor<int> create_tensor(const vector<size_t>& shape)
-{
-    size_t len = flat_size(shape);
-    int* data = new int[len];
-
-    for (size_t i = 0; i < len; i++)
-        data[i] = i;
-
-    return Tensor<int>(data, shape);
-}
-
 TEST(AddTensorTest, AddEmptyTensor)
 {
     auto tensor1 = create_tensor({ 0, 0 });
