@@ -16,5 +16,7 @@ int main()
     Tensile::Tensor<int> t1(d1, s1), t2(d2, s2);
 
     auto result = t1 * t2; // matmul
-    Tensile::Log::get_ostream_logger()->log("Result: " + result.flat_string());
+    Tensile::Log::get_ostream_logger()->log("t1: " + t1.to_string() + "\n");
+    Tensile::Log::get_ostream_logger()->log("t2: " + t2.to_string() + "\n");
+    Tensile::Log::get_ostream_logger()->log("Result: " + result.to_string());
 }

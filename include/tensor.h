@@ -203,6 +203,13 @@ public:
         return str;
     }
 
+    std::string to_string() const
+    {
+        std::string res = "Tensor(";
+        res += to_string_rec() + ", shape=" + shape_to_string() + ")";
+        return res;
+    }
+
     void expand_dims(size_t axis)
     {
         if (axis > n_dims_)
@@ -441,6 +448,29 @@ private:
         }
 
         return multi_indices_to_flat(new_indices);
+    }
+
+    std::string to_string_rec(std::vector<size_t> dims = {}) const
+    {
+        if (n_dims_ == 0)
+            return "[]";
+
+        if (dims.size() == n_dims_)
+            return "";
+
+        std::string res = "[";
+        for (size_t i = 0; i < shape_[dims.size()]; i++) {
+            dims.push_back(i);
+            auto delim = (i < shape_[dims.size() - 1] - 1) ? ", " : "";
+            if (dims.size() == n_dims_) {
+                res += std::to_string(data_[multi_indices_to_flat(dims)]) + delim;
+            } else {
+                res += "\n" + std::string(dims.size() * 2, ' ') + to_string_rec(dims) + delim;
+            }
+            dims.pop_back();
+        }
+        res += (dims.size() == n_dims_ - 1 ? "]" : "\n" + std::string(dims.size() * 2, ' ') + "]");
+        return res;
     }
 
     std::string shape_to_string() const
