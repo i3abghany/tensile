@@ -407,7 +407,7 @@ private:
 
     static std::array<size_t, MAX_DIM> get_iter_shape(const std::array<size_t, MAX_DIM>& s)
     {
-        std::array<size_t, MAX_DIM> iter{};
+        std::array<size_t, MAX_DIM> iter {};
         for (size_t i = 0; i < MAX_DIM; i++)
             iter[i] = s[i] == 0 ? 1 : s[i];
         return iter;
@@ -418,7 +418,7 @@ private:
     {
         UNIMPLEMENTED_IF(get_n_dims_from_shape(s2) != n_dims_,
                          "Broadcasting not implemented for tensors with different number of dimensions");
-        std::array<size_t, MAX_DIM> shape{};
+        std::array<size_t, MAX_DIM> shape {};
         for (size_t i = 0; i < n_dims_; i++)
             shape[i] = std::max(shape_[i], s2[i]);
 

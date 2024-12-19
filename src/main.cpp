@@ -1,4 +1,3 @@
-#include <cassert>
 #include <memory>
 
 #include "tensile/logger.h"
@@ -15,8 +14,9 @@ int main()
     auto d1 = get_data(s1[0], s1[1]), d2 = get_data(s2[0], s2[1]);
     Tensile::Tensor<int> t1(d1, s1), t2(d2, s2);
 
-    auto result = t1 * t2; // matmul
-    Tensile::Log::get_ostream_logger()->log("t1: " + t1.to_string() + "\n");
-    Tensile::Log::get_ostream_logger()->log("t2: " + t2.to_string() + "\n");
-    Tensile::Log::get_ostream_logger()->log("Result: " + result.to_string());
+    auto result = t1 * t2;
+
+    LOG_INFO("t1: " + t1.to_string());
+    LOG_INFO("t2: " + t2.to_string());
+    LOG_INFO("result: " + result.to_string());
 }

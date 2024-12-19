@@ -4,76 +4,64 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <utility>
 
 namespace Tensile::Log {
 
-template <typename StreamType> class LoggerDecorator;
+template <typename S> class LoggerDecorator;
+template <typename S> class TimestampLogger;
+template <typename S> class SeverityLogger;
 
-template <typename StreamType> class TimestampLogger;
+enum Severity { INFO, WARNING, ERROR };
 
-template <typename StreamType> class SeverityLogger;
-
-template <typename StreamType> class Logger {
+template <typename S> class LoggerBase {
 public:
-    explicit Logger(StreamType& stream)
+    explicit LoggerBase(S& stream)
         : stream_(stream)
     {
     }
-    explicit Logger(std::shared_ptr<Logger<StreamType>> wrapped_logger)
-        : stream_(wrapped_logger->stream_)
+
+    explicit LoggerBase(std::shared_ptr<LoggerBase<S>> logger)
+        : stream_(logger->stream_)
     {
     }
-    virtual ~Logger() = default;
 
     virtual void log(const std::string& message) { stream_ << message << std::endl; }
 
-    static auto get_logger()
-    {
-        static std::shared_ptr<LoggerDecorator<StreamType>> logger = nullptr;
-
-        if (logger != nullptr)
-            return logger;
-
-        auto created_logger = std::make_shared<Logger<StreamType>>(std::cout);
-        auto timestame_logger = std::make_shared<TimestampLogger<StreamType>>(created_logger);
-        auto severity_logger = std::make_shared<SeverityLogger<StreamType>>(timestame_logger);
-
-        return logger = severity_logger;
-    }
+    virtual ~LoggerBase() = default;
 
 protected:
-    StreamType& stream_;
+    S& stream_;
 };
 
-template <typename StreamType> class LoggerDecorator : public Logger<StreamType> {
+template <typename S> class LoggerDecorator : public LoggerBase<S> {
 public:
-    explicit LoggerDecorator(std::shared_ptr<Logger<StreamType>> wrapped_logger)
-        : Logger<StreamType>(wrapped_logger)
-        , wrapped_logger_(wrapped_logger)
+    explicit LoggerDecorator(std::shared_ptr<LoggerBase<S>> logger)
+        : LoggerBase<S>(logger)
+        , logger(logger)
     {
     }
 
-    void log(const std::string& message) override { wrapped_logger_->log(message); }
+    void log(const std::string& message) override { logger->log(message); }
 
 protected:
-    std::shared_ptr<Logger<StreamType>> wrapped_logger_;
+    std::shared_ptr<LoggerBase<S>> logger;
 };
 
-template <typename StreamType> class TimestampLogger : public LoggerDecorator<StreamType> {
+template <typename S> class TimestampLogger : public LoggerDecorator<S> {
 public:
-    explicit TimestampLogger(std::shared_ptr<Logger<StreamType>> wrapped_logger)
-        : LoggerDecorator<StreamType>(wrapped_logger)
+    explicit TimestampLogger(std::shared_ptr<LoggerBase<S>> logger)
+        : LoggerDecorator<S>(std::move(logger))
     {
     }
 
     void log(const std::string& message) override
     {
-        std::string timestamp = get_current_time();
-        this->wrapped_logger_->log("[" + timestamp + "] " + message);
+        auto msg = "[" + get_time_stamp() + "] " + message;
+        LoggerDecorator<S>::logger->log(msg);
     }
 
-private:
-    std::string get_current_time()
+    [[nodiscard]] std::string get_time_stamp() const
     {
         auto now = std::chrono::system_clock::now();
         auto in_time_t = std::chrono::system_clock::to_time_t(now);
@@ -83,25 +71,26 @@ private:
     }
 };
 
-template <typename StreamType> class SeverityLogger : public LoggerDecorator<StreamType> {
+template <typename S> class SeverityLogger : public LoggerDecorator<S> {
 public:
-    enum Severity { INFO, WARNING, ERROR };
-
-    explicit SeverityLogger(std::shared_ptr<Logger<StreamType>> wrapped_logger)
-        : LoggerDecorator<StreamType>(wrapped_logger)
+    explicit SeverityLogger(std::shared_ptr<LoggerBase<S>> logger)
+        : LoggerDecorator<S>(std::move(logger))
+        , severity_(INFO)
     {
     }
 
-    void log(const std::string& message, Severity severity)
+    void log(const std::string& message) override
     {
-        std::string severity_str = severity_to_string(severity);
-        this->wrapped_logger_->log("[" + severity_str + "] " + message);
+        auto msg = "[" + get_severity_str() + "] " + message;
+        LoggerDecorator<S>::logger->log(msg);
     }
+
+    void set_severity(Severity severity) { severity_ = severity; }
 
 private:
-    static std::string severity_to_string(Severity severity)
+    [[nodiscard]] std::string get_severity_str() const
     {
-        switch (severity) {
+        switch (severity_) {
         case INFO:
             return "INFO";
         case WARNING:
@@ -112,8 +101,27 @@ private:
             return "UNKNOWN";
         }
     }
+
+    Severity severity_;
 };
 
-std::shared_ptr<Logger<std::ostream>> get_ostream_logger();
+std::shared_ptr<LoggerBase<std::ostream>> get_ostream_logger(Tensile::Log::Severity);
 
+#define LOG_INFO(message)                                                                                              \
+    do {                                                                                                               \
+        auto logger = Tensile::Log::get_ostream_logger(Tensile::Log::Severity::INFO);                                  \
+        logger->log(message);                                                                                          \
+    } while (0)
+
+#define LOG_WARNING(message)                                                                                           \
+    do {                                                                                                               \
+        auto logger = Tensile::Log::get_ostream_logger(Tensile::Log::Severity::WARNING);                               \
+        logger->log(message);                                                                                          \
+    } while (0)
+
+#define LOG_ERROR(message)                                                                                             \
+    do {                                                                                                               \
+        auto logger = Tensile::Log::get_ostream_logger(Tensile::Log::Severity::ERROR);                                 \
+        logger->log(message);                                                                                          \
+    } while (0)
 }
