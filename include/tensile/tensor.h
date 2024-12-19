@@ -474,8 +474,8 @@ private:
     [[nodiscard]] std::string shape_to_string() const
     {
         std::string str = "[";
-        for (size_t i = 0; i < MAX_DIM; i++)
-            str += std::to_string(shape_[i]) + ", ";
+        for (size_t i = 0; i < n_dims_; i++)
+            str += std::to_string(shape_[i]) + (i < n_dims_ - 1 ? ", " : "");
         str += "]";
         return str;
     }
