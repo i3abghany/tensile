@@ -1,8 +1,8 @@
 #include <cassert>
 #include <memory>
 
-#include "logger.h"
-#include "tensor.h"
+#include "tensile/logger.h"
+#include "tensile/tensor.h"
 
 int main()
 {

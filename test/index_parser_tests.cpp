@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "index_parser.h"
+#include "tensile/index_parser.h"
 
 using Tensile::parse_indices;
 

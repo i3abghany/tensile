@@ -3,7 +3,7 @@
 #include <utility>
 #include <vector>
 
-#include "tensor.h"
+#include "tensile/tensor.h"
 #include "test_utils.h"
 
 using std::make_tuple;

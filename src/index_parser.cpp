@@ -1,4 +1,4 @@
-#include "index_parser.h"
+#include "tensile/index_parser.h"
 
 #include <sstream>
 #include <string>

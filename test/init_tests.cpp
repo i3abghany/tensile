@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "tensor.h"
+#include "tensile/tensor.h"
 
 using Tensile::Tensor;
 

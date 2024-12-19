@@ -1,4 +1,4 @@
-#include "logger.h"
+#include "tensile/logger.h"
 
 namespace Tensile::Log {
 
