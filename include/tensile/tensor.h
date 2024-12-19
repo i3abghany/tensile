@@ -148,6 +148,16 @@ public:
         return data_[flat_idx];
     }
 
+    DataType& item_at(const std::vector<size_t>& indices)
+    {
+        return operator[](indices);
+    }
+
+    DataType item_at(const std::vector<size_t>& indices) const
+    {
+        return operator[](indices);
+    }
+
     Tensor<DataType> operator[](const std::vector<std::pair<size_t, size_t>>& indices)
     {
         if (indices.size() != n_dims_)
@@ -347,7 +357,7 @@ private:
             for (size_t j = 0; j < d; j++) {
                 ResultType sum = 0;
                 for (size_t k = 0; k < b; k++) {
-                    sum += (*this)[std::vector { i, k }] * other[std::vector { k, j }];
+                    sum += item_at({ i, k }) *  other.item_at({ k, j });
                 }
                 result[std::vector { i, j }] = sum;
             }
