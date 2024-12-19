@@ -19,6 +19,7 @@ add_executable(tensile_tests
     shape_tests.cpp
     add_tests.cpp
     matmul2d_tests.cpp
+    matmul3d_tests.cpp
 )
 
 target_link_libraries(tensile_tests PRIVATE GTest::gtest_main)

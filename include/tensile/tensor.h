@@ -117,6 +117,26 @@ public:
         return size;
     }
 
+    bool operator==(const Tensor<DataType>& other) const
+    {
+        if (n_dims_ != other.n_dims_)
+            return false;
+
+        for (size_t i = 0; i < n_dims_; i++)
+            if (shape_[i] != other.shape_[i])
+                return false;
+
+        auto iter = get_iter_shape(shape_);
+        ENUMERATE(iter, i, j, k, l)
+        {
+            size_t flat_idx = multi_indices_to_flat({ i, j, k, l });
+            if (data_[flat_idx] != other.data_[flat_idx])
+                return false;
+        }
+
+        return true;
+    }
+
     Tensor<DataType> operator[](const std::string& indices)
     {
         auto parsed_indices = parse_indices(indices);
@@ -309,11 +329,10 @@ public:
         if (!matmul_compat(*this, other))
             throw std::invalid_argument("Incompatible shapes for matrix multiplication");
 
-        if (n_dims() == 2 && other.n_dims() == 2) {
-            return matmul2d(other);
-        }
+        if (n_dims() == 2) return matmul2d(other);
+        if (n_dims() == 3) return matmul3d(other);
 
-        UNIMPLEMENTED("Matmul is only implemented for 2D tensors");
+        UNIMPLEMENTED("Matmul is not implemented for tensors with different number of dimensions");
     }
 
     Tensor<DataType> operator+() const
@@ -357,9 +376,38 @@ private:
             for (size_t j = 0; j < d; j++) {
                 ResultType sum = 0;
                 for (size_t k = 0; k < b; k++) {
-                    sum += item_at({ i, k }) *  other.item_at({ k, j });
+                    sum += item_at({ i, k }) * other.item_at({ k, j });
                 }
-                result[std::vector { i, j }] = sum;
+                result.item_at({ i, j }) = sum;
+            }
+        }
+
+        return result;
+    }
+
+    template <typename OtherDataType>
+        requires CompatibleTypes<DataType, OtherDataType>
+    auto matmul3d(const Tensor<OtherDataType>& other) -> Tensor<decltype(DataType() * OtherDataType())>
+    {
+        assert(n_dims() == 3 && other.n_dims() == 3 && matmul_compat(*this, other));
+
+        size_t batch = std::max(shape()[0], other.shape()[0]);
+        size_t a = shape()[1], b = shape()[2];
+        size_t d = other.shape()[1], e = other.shape()[2];
+
+        using ResultType = decltype(DataType() * OtherDataType());
+        auto* result_data = new ResultType[batch * d * e];
+        Tensor<ResultType> result(result_data, { batch, d, e });
+
+        for (size_t bt = 0; bt < batch; bt++) {
+            for (size_t i = 0; i < a; i++) {
+                for (size_t j = 0; j < e; j++) {
+                    ResultType sum = 0;
+                    for (size_t k = 0; k < b; k++) {
+                        sum += item_at({ std::min(shape()[0] - 1, bt), i, k }) * other.item_at({ std::min(other.shape()[0] - 1, bt), k, j });
+                    }
+                    result.item_at({ bt, i, j }) = sum;
+                }
             }
         }
 
