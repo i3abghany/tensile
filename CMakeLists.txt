@@ -21,5 +21,9 @@ add_executable(tensile
     src/unimpl.cpp
 )
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_definitions(tensile PRIVATE TENSILE_LOGGING_ENABLED)
+endif()
+
 enable_testing()
 add_subdirectory(test)

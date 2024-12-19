@@ -107,6 +107,10 @@ private:
 
 std::shared_ptr<LoggerBase<std::ostream>> get_ostream_logger(Tensile::Log::Severity);
 
+}
+
+#ifdef TENSILE_LOGGING_ENABLED
+
 #define LOG_INFO(message)                                                                                              \
     do {                                                                                                               \
         auto logger = Tensile::Log::get_ostream_logger(Tensile::Log::Severity::INFO);                                  \
@@ -124,4 +128,11 @@ std::shared_ptr<LoggerBase<std::ostream>> get_ostream_logger(Tensile::Log::Sever
         auto logger = Tensile::Log::get_ostream_logger(Tensile::Log::Severity::ERROR);                                 \
         logger->log(message);                                                                                          \
     } while (0)
-}
+
+#else
+
+#define LOG_INFO(message) (void)(message)
+#define LOG_WARNING(message) (void)(message)
+#define LOG_ERROR(message) (void)(message)
+
+#endif
