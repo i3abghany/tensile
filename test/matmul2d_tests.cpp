@@ -3,14 +3,6 @@
 #include "tensile/tensor.h"
 #include "test_utils.h"
 
-using std::array;
-using std::make_tuple;
-using std::pair;
-using std::string;
-using std::tuple;
-using std::vector;
-using Tensile::Tensor;
-
 TEST(Tensor2dMatmulTest, Matmul)
 {
     auto t1 = create_tensor({ 2, 2 });
