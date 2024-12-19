@@ -5,6 +5,7 @@
 #include <cassert>
 #include <concepts>
 #include <cstdint>
+#include <functional>
 #include <numeric>
 #include <utility>
 
@@ -108,10 +109,10 @@ public:
         }
     }
 
-    size_t size() const
+    [[nodiscard]] size_t size() const
     {
         size_t size = 1;
-        for (size_t i = 0; i < std::max(1UL, n_dims_); i++)
+        for (size_t i = 0; i < std::max((size_t)1, n_dims_); i++)
             size *= shape_[i];
         return size;
     }
@@ -188,7 +189,7 @@ public:
             strides_[i] = strides_[i + 1] * shape_[i + 1];
     }
 
-    std::string flat_string() const
+    [[nodiscard]] std::string flat_string() const
     {
         auto iter = get_iter_shape(shape_);
         std::string str = "[";
@@ -203,7 +204,7 @@ public:
         return str;
     }
 
-    std::string to_string() const
+    [[nodiscard]] std::string to_string() const
     {
         std::string res = "Tensor(";
         res += to_string_rec() + ", shape=" + shape_to_string() + ")";
@@ -316,11 +317,11 @@ public:
         return unary_op(op);
     }
 
-    bool is_empty() const { return n_dims_ == 0; }
+    [[nodiscard]] bool is_empty() const { return n_dims_ == 0; }
 
-    const std::array<size_t, MAX_DIM> shape() const { return shape_; }
+    [[nodiscard]] std::array<size_t, MAX_DIM> shape() const { return shape_; }
 
-    size_t n_dims() const { return n_dims_; }
+    [[nodiscard]] size_t n_dims() const { return n_dims_; }
 
     ~Tensor()
     {
@@ -370,7 +371,7 @@ private:
         auto iter = get_iter_shape(shape);
 
         using ResultType = decltype(DataType() + OtherDataType());
-        auto flat_size = std::accumulate(shape.begin(), shape.begin() + result_n_dims, 1, std::multiplies<size_t>());
+        auto flat_size = std::accumulate(shape.begin(), shape.begin() + result_n_dims, 1, std::multiplies<>());
         auto* result_data = new ResultType[flat_size];
 
         Tensor<ResultType> result(result_data, shape);
@@ -406,28 +407,25 @@ private:
 
     static std::array<size_t, MAX_DIM> get_iter_shape(const std::array<size_t, MAX_DIM>& s)
     {
-        std::array<size_t, MAX_DIM> iter;
+        std::array<size_t, MAX_DIM> iter{};
         for (size_t i = 0; i < MAX_DIM; i++)
             iter[i] = s[i] == 0 ? 1 : s[i];
         return iter;
     }
 
     // FIXME: doesn't work when tensors have different number of dimensions
-    std::array<size_t, MAX_DIM> get_broadcasted_shape(const std::array<size_t, MAX_DIM>& s2) const
+    [[nodiscard]] std::array<size_t, MAX_DIM> get_broadcasted_shape(const std::array<size_t, MAX_DIM>& s2) const
     {
         UNIMPLEMENTED_IF(get_n_dims_from_shape(s2) != n_dims_,
                          "Broadcasting not implemented for tensors with different number of dimensions");
-        std::array<size_t, MAX_DIM> shape;
+        std::array<size_t, MAX_DIM> shape{};
         for (size_t i = 0; i < n_dims_; i++)
             shape[i] = std::max(shape_[i], s2[i]);
-
-        for (size_t i = n_dims_; i < MAX_DIM; i++)
-            shape[i] = 0;
 
         return shape;
     }
 
-    size_t multi_indices_to_flat(const std::vector<size_t>& indices) const
+    [[nodiscard]] size_t multi_indices_to_flat(const std::vector<size_t>& indices) const
     {
         size_t flat_idx = 0;
         for (int i = (int)n_dims_ - 1; i >= 0; i--) {
@@ -439,7 +437,7 @@ private:
         return flat_idx + offset_;
     }
 
-    size_t broadcasted_flat_index(const std::vector<size_t>& indices) const
+    [[nodiscard]] size_t broadcasted_flat_index(const std::vector<size_t>& indices) const
     {
         std::vector<size_t> new_indices;
 
@@ -450,7 +448,7 @@ private:
         return multi_indices_to_flat(new_indices);
     }
 
-    std::string to_string_rec(std::vector<size_t> dims = {}) const
+    [[nodiscard]] std::string to_string_rec(std::vector<size_t> dims = {}) const
     {
         if (n_dims_ == 0)
             return "[]";
@@ -473,7 +471,7 @@ private:
         return res;
     }
 
-    std::string shape_to_string() const
+    [[nodiscard]] std::string shape_to_string() const
     {
         std::string str = "[";
         for (size_t i = 0; i < MAX_DIM; i++)
