@@ -26,7 +26,7 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Values(
         std::make_pair("0:1",
                        std::vector<std::pair<size_t, size_t>> {
-                           { 0, 1 }
+                           {0, 1}
 }),
         std::make_pair("0:1, 2:3", std::vector<std::pair<size_t, size_t>> { { 0, 1 }, { 2, 3 } }),
         std::make_pair("0:1, 2:3", std::vector<std::pair<size_t, size_t>> { { 0, 1 }, { 2, 3 } }),

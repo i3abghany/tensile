@@ -3,6 +3,8 @@
 #include "tensile/tensor.h"
 #include "test_utils.h"
 
+using Ind = std::vector<size_t>;
+
 TEST(Tensor2dMatmulTest, Matmul)
 {
     auto t1 = create_tensor({ 2, 2 });
@@ -10,10 +12,10 @@ TEST(Tensor2dMatmulTest, Matmul)
 
     const auto result = t1 * t2;
 
-    ASSERT_EQ((result[{ 0, 0 }]), 2);
-    ASSERT_EQ((result[{ 0, 1 }]), 3);
-    ASSERT_EQ((result[{ 1, 0 }]), 6);
-    ASSERT_EQ((result[{ 1, 1 }]), 11);
+    ASSERT_EQ((result[Ind { 0, 0 }]), 2);
+    ASSERT_EQ((result[Ind { 0, 1 }]), 3);
+    ASSERT_EQ((result[Ind { 1, 0 }]), 6);
+    ASSERT_EQ((result[Ind { 1, 1 }]), 11);
 }
 
 TEST(Tensor2dMatmulTest, SliceMatmul)
@@ -26,8 +28,8 @@ TEST(Tensor2dMatmulTest, SliceMatmul)
 
     const auto result = s1 * s2;
 
-    ASSERT_EQ((result[{ 0, 0 }]), 24);
-    ASSERT_EQ((result[{ 0, 1 }]), 35);
-    ASSERT_EQ((result[{ 1, 0 }]), 40);
-    ASSERT_EQ((result[{ 1, 1 }]), 59);
+    ASSERT_EQ((result[Ind { 0, 0 }]), 24);
+    ASSERT_EQ((result[Ind { 0, 1 }]), 35);
+    ASSERT_EQ((result[Ind { 1, 0 }]), 40);
+    ASSERT_EQ((result[Ind { 1, 1 }]), 59);
 }
