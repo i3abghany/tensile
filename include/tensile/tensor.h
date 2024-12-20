@@ -107,6 +107,8 @@ public:
             size_t flat_idx = multi_indices_to_flat({ i, j, k, l });
             new_tensor.data_[flat_idx] = data_[flat_idx];
         }
+
+        return new_tensor;
     }
 
     [[nodiscard]] size_t size() const
