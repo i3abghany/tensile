@@ -68,7 +68,7 @@ public:
     Tensor(const Tensor<DataType>& other)
         : n_dims_(other.n_dims_)
         , offset_(other.offset_)
-        , parent(other.parent)
+        , parent(!other.parent ? &const_cast<Tensor<DataType>&>(other) : other.parent)
         , data_(other.data_)
     {
         std::copy(other.shape_.begin(), other.shape_.end(), shape_.begin());
@@ -82,7 +82,7 @@ public:
 
         n_dims_ = other.n_dims_;
         offset_ = other.offset_;
-        parent = other.parent;
+        parent = !other.parent ? &const_cast<Tensor<DataType>&>(other) : other.parent;
         data_ = other.data_;
 
         std::copy(other.shape_.begin(), other.shape_.end(), shape_.begin());
