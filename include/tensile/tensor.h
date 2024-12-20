@@ -26,7 +26,7 @@ concept TensorType = std::integral<D> || std::floating_point<D>;
 static constexpr size_t MAX_DIM = 4;
 
 template <typename DataType>
-    requires TensorType<DataType>
+requires TensorType<DataType>
 class Tensor {
 public:
     Tensor()
@@ -170,15 +170,9 @@ public:
         return data_[flat_idx];
     }
 
-    DataType& item_at(const std::vector<size_t>& indices)
-    {
-        return operator[](indices);
-    }
+    DataType& item_at(const std::vector<size_t>& indices) { return operator[](indices); }
 
-    DataType item_at(const std::vector<size_t>& indices) const
-    {
-        return operator[](indices);
-    }
+    DataType item_at(const std::vector<size_t>& indices) const { return operator[](indices); }
 
     Tensor<DataType> operator[](const std::vector<std::pair<size_t, size_t>>& indices)
     {
@@ -243,6 +237,36 @@ public:
         return res;
     }
 
+    Tensor<DataType> sum(size_t axis, bool keepdims) const
+    {
+        if (axis >= n_dims_)
+            throw std::invalid_argument("Axis out of bounds");
+
+        std::vector<size_t> new_shape {};
+        for (size_t i = 0; i < n_dims_; i++) {
+            if (i == axis)
+                continue;
+            new_shape.push_back(shape_[i]);
+        }
+
+        auto result = zeros(new_shape);
+
+        auto iter = get_iter_shape(shape_);
+        ENUMERATE(iter, i, j, k, l)
+        {
+            std::vector<size_t> indices = { i, j, k, l };
+            indices.erase(indices.begin() + axis);
+            size_t new_idx = result.broadcasted_flat_index(indices);
+            size_t original_idx = broadcasted_flat_index({ i, j, k, l });
+            result.data_[new_idx] += data_[original_idx];
+        }
+
+        if (keepdims)
+            result.expand_dims(axis);
+
+        return result;
+    }
+
     void expand_dims(size_t axis)
     {
         if (axis > n_dims_)
@@ -305,7 +329,7 @@ public:
     }
 
     template <typename OtherDataType>
-        requires CompatibleTypes<DataType, OtherDataType>
+    requires CompatibleTypes<DataType, OtherDataType>
     auto operator+(const Tensor<OtherDataType>& other) -> Tensor<decltype(DataType() + OtherDataType())>
     {
         using ResultDataType = decltype(DataType() + OtherDataType());
@@ -315,7 +339,7 @@ public:
     }
 
     template <typename OtherDataType>
-        requires CompatibleTypes<DataType, OtherDataType>
+    requires CompatibleTypes<DataType, OtherDataType>
     auto operator-(const Tensor<OtherDataType>& other) -> Tensor<decltype(DataType() - OtherDataType())>
     {
         using ResultDataType = decltype(DataType() - OtherDataType());
@@ -325,20 +349,52 @@ public:
     }
 
     template <typename OtherDataType>
-        requires CompatibleTypes<DataType, OtherDataType>
+    requires CompatibleTypes<DataType, OtherDataType>
+    auto elememtwise_mul(const Tensor<OtherDataType>& other) -> Tensor<decltype(DataType() * OtherDataType())>
+    {
+        using ResultDataType = decltype(DataType() * OtherDataType());
+        std::function<ResultDataType(DataType, OtherDataType)> op
+            = [](DataType a, OtherDataType b) -> ResultDataType { return a * b; };
+        return binary_broadcastable_elementwise_op(other, op);
+    }
+
+    template <typename OtherDataType>
+    requires CompatibleTypes<DataType, OtherDataType>
+    auto pow(OtherDataType exponent) -> Tensor<DataType>
+    {
+        if (exponent == 0) {
+            return ones({ shape_.begin(), shape_.begin() + n_dims_ });
+        }
+
+        if (exponent == 1) {
+            return copy();
+        }
+
+        if (exponent % 2 == 0) {
+            auto half_pow = pow(exponent / 2);
+            return half_pow.elememtwise_mul(half_pow);
+        } else {
+            return elememtwise_mul(pow(exponent - 1));
+        }
+    }
+
+    template <typename OtherDataType>
+    requires CompatibleTypes<DataType, OtherDataType>
     auto operator*(const Tensor<OtherDataType>& other) -> Tensor<decltype(DataType() * OtherDataType())>
     {
         if (!matmul_compat(*this, other))
             throw std::invalid_argument("Incompatible shapes for matrix multiplication");
 
-        if (n_dims() == 2) return matmul2d(other);
-        if (n_dims() == 3) return matmul3d(other);
+        if (n_dims() == 2)
+            return matmul2d(other);
+        if (n_dims() == 3)
+            return matmul3d(other);
 
         UNIMPLEMENTED("Matmul is not implemented for tensors with different number of dimensions");
     }
 
     template <typename OtherDataType>
-        requires CompatibleTypes<DataType, OtherDataType>
+    requires CompatibleTypes<DataType, OtherDataType>
     auto operator*(OtherDataType scalar) -> Tensor<decltype(DataType() * scalar)>
     {
         std::function<decltype(DataType() * OtherDataType())(DataType)> op
@@ -369,9 +425,23 @@ public:
             delete[] data_;
     }
 
+public:
+    static Tensor<DataType> ones(const std::vector<size_t>& shape) { return all_v(shape, 1); }
+
+    static Tensor<DataType> zeros(const std::vector<size_t>& shape) { return all_v(shape, 0); }
+
+private:
+    static Tensor<DataType> all_v(const std::vector<size_t>& shape, DataType value)
+    {
+        size_t n_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<>());
+        auto* data = new DataType[n_elems];
+        std::fill(data, data + n_elems, value);
+        return Tensor(data, shape);
+    }
+
 private:
     template <typename OtherDataType>
-        requires CompatibleTypes<DataType, OtherDataType>
+    requires CompatibleTypes<DataType, OtherDataType>
     auto matmul2d(const Tensor<OtherDataType>& other) -> Tensor<decltype(DataType() * OtherDataType())>
     {
         assert(n_dims() == 2 && other.n_dims() == 2 && matmul_compat(*this, other));
@@ -397,7 +467,7 @@ private:
     }
 
     template <typename OtherDataType>
-        requires CompatibleTypes<DataType, OtherDataType>
+    requires CompatibleTypes<DataType, OtherDataType>
     auto matmul3d(const Tensor<OtherDataType>& other) -> Tensor<decltype(DataType() * OtherDataType())>
     {
         assert(n_dims() == 3 && other.n_dims() == 3 && matmul_compat(*this, other));
@@ -415,7 +485,8 @@ private:
                 for (size_t j = 0; j < e; j++) {
                     ResultType sum = 0;
                     for (size_t k = 0; k < b; k++) {
-                        sum += item_at({ std::min(shape()[0] - 1, bt), i, k }) * other.item_at({ std::min(other.shape()[0] - 1, bt), k, j });
+                        sum += item_at({ std::min(shape()[0] - 1, bt), i, k })
+                            * other.item_at({ std::min(other.shape()[0] - 1, bt), k, j });
                     }
                     result.item_at({ bt, i, j }) = sum;
                 }
@@ -427,7 +498,7 @@ private:
 
 private:
     template <typename OtherDataType>
-        requires CompatibleTypes<DataType, OtherDataType>
+    requires CompatibleTypes<DataType, OtherDataType>
     auto binary_broadcastable_elementwise_op(
         const Tensor<OtherDataType>& other,
         std::function<decltype(DataType() + OtherDataType())(DataType, OtherDataType)> op)
