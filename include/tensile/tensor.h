@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <concepts>
 #include <cstdint>
 #include <functional>
@@ -359,8 +360,8 @@ public:
     }
 
     template <typename OtherDataType>
-    requires CompatibleTypes<DataType, OtherDataType>
-    auto pow(OtherDataType exponent) -> Tensor<DataType>
+    requires std::integral<OtherDataType>
+    auto pow(OtherDataType exponent) -> Tensor<DataType> const
     {
         if (exponent == 0) {
             return ones({ shape_.begin(), shape_.begin() + n_dims_ });
@@ -410,6 +411,12 @@ public:
     Tensor<DataType> operator-() const
     {
         std::function<DataType(DataType)> op = [](DataType a) -> DataType { return -a; };
+        return unary_op(op);
+    }
+
+    Tensor<DataType> exp() const
+    {
+        std::function<DataType(DataType)> op = [](DataType a) -> DataType { return std::exp(a); };
         return unary_op(op);
     }
 
