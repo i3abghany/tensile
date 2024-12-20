@@ -337,6 +337,15 @@ public:
         UNIMPLEMENTED("Matmul is not implemented for tensors with different number of dimensions");
     }
 
+    template <typename OtherDataType>
+        requires CompatibleTypes<DataType, OtherDataType>
+    auto operator*(OtherDataType scalar) -> Tensor<decltype(DataType() * scalar)>
+    {
+        std::function<decltype(DataType() * OtherDataType())(DataType)> op
+            = [scalar](DataType a) -> decltype(DataType() * scalar) { return a * scalar; };
+        return unary_op(op);
+    }
+
     Tensor<DataType> operator+() const
     {
         return copy(); // identity operation
