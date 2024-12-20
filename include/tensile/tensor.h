@@ -381,7 +381,7 @@ public:
 
     template <typename OtherDataType>
     requires CompatibleTypes<DataType, OtherDataType>
-    auto operator*(const Tensor<OtherDataType>& other) -> Tensor<decltype(DataType() * OtherDataType())>
+    auto operator*(const Tensor<OtherDataType>& other) -> Tensor<decltype(DataType() * OtherDataType())> const
     {
         if (!matmul_compat(*this, other))
             throw std::invalid_argument("Incompatible shapes for matrix multiplication");
@@ -396,10 +396,25 @@ public:
 
     template <typename OtherDataType>
     requires CompatibleTypes<DataType, OtherDataType>
-    auto operator*(OtherDataType scalar) -> Tensor<decltype(DataType() * scalar)>
+    auto operator*(OtherDataType scalar) -> Tensor<decltype(DataType() * scalar)> const
     {
         std::function<decltype(DataType() * OtherDataType())(DataType)> op
             = [scalar](DataType a) -> decltype(DataType() * scalar) { return a * scalar; };
+        return unary_op(op);
+    }
+
+    template <typename OtherDataType>
+    requires CompatibleTypes<DataType, OtherDataType>
+    auto operator+(OtherDataType scalar) -> Tensor<decltype(DataType() * scalar)> const
+    {
+        std::function<decltype(DataType() * OtherDataType())(DataType)> op
+            = [scalar](DataType a) -> decltype(DataType() * scalar) { return a + scalar; };
+        return unary_op(op);
+    }
+
+    Tensor<DataType> reciprocal() const
+    {
+        std::function<DataType(DataType)> op = [](DataType a) -> DataType { return 1 / a; };
         return unary_op(op);
     }
 
@@ -436,6 +451,14 @@ public:
     static Tensor<DataType> ones(const std::vector<size_t>& shape) { return all_v(shape, 1); }
 
     static Tensor<DataType> zeros(const std::vector<size_t>& shape) { return all_v(shape, 0); }
+
+    static Tensor<DataType> randn(const std::vector<size_t>& shape)
+    {
+        auto* data = new DataType[std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<>())];
+        for (size_t i = 0; i < shape.size(); i++)
+            data[i] = (DataType)rand() / RAND_MAX;
+        return Tensor(data, shape);
+    }
 
 private:
     static Tensor<DataType> all_v(const std::vector<size_t>& shape, DataType value)
