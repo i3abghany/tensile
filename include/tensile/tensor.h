@@ -7,6 +7,7 @@
 #include <concepts>
 #include <cstdint>
 #include <functional>
+#include <immintrin.h>
 #include <numeric>
 #include <utility>
 
@@ -140,7 +141,7 @@ public:
         return true;
     }
 
-    Tensor<DataType> operator[](const std::string& indices)
+    Tensor<DataType> operator[](const std::string& indices) const
     {
         auto parsed_indices = parse_indices(indices);
         return operator[](parsed_indices);
@@ -171,11 +172,20 @@ public:
         return data_[flat_idx];
     }
 
+    const DataType* address_of(const std::vector<size_t>& indices) const
+    {
+        if (indices.size() != n_dims_)
+            throw std::invalid_argument("Number of indices does not match the number of dimensions");
+
+        size_t flat_idx = multi_indices_to_flat(indices);
+        return &data_[flat_idx];
+    }
+
     DataType& item_at(const std::vector<size_t>& indices) { return operator[](indices); }
 
     DataType item_at(const std::vector<size_t>& indices) const { return operator[](indices); }
 
-    Tensor<DataType> operator[](const std::vector<std::pair<size_t, size_t>>& indices)
+    Tensor<DataType> operator[](const std::vector<std::pair<size_t, size_t>>& indices) const
     {
         if (indices.size() != n_dims_)
             throw std::invalid_argument("Number of indices does not match the number of dimensions");
@@ -264,6 +274,25 @@ public:
 
         if (keepdims)
             result.expand_dims(axis);
+
+        return result;
+    }
+
+    Tensor<DataType> transpose() const
+    {
+        if (n_dims_ != 2)
+            throw std::invalid_argument("Transpose is only implemented for 2D tensors");
+
+        Tensor<DataType> result(*this);
+
+        auto new_shape = shape_;
+        std::swap(new_shape[0], new_shape[1]);
+
+        auto new_strides = strides_;
+        std::swap(new_strides[0], new_strides[1]);
+
+        std::copy(new_shape.begin(), new_shape.end(), result.shape_.begin());
+        std::copy(new_strides.begin(), new_strides.end(), result.strides_.begin());
 
         return result;
     }
