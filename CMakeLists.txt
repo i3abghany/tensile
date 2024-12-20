@@ -12,7 +12,11 @@ add_compile_options(-Wall
     -Wextra
     -Wpedantic
     -Werror
+    -march=znver2
+    -fopenmp
 )
+
+add_link_options(-fopenmp)
 
 add_executable(tensile
     src/main.cpp
